@@ -354,5 +354,5 @@ Yes, there is a clear temporal pattern to this phenomenon. It appears that over 
 
 - [Github-flavored markdown refresher #1](https://guides.github.com/features/mastering-markdown/)
 
-[Github-flavored markdown refresher #2](https://rmarkdown.rstudio.com/github_document_format.html#table_of_contents)
+- [Github-flavored markdown refresher #2](https://rmarkdown.rstudio.com/github_document_format.html#table_of_contents)
 
