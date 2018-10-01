@@ -27,6 +27,7 @@ For all things, graphical and tabular, if you’re dissatisfied with a result, d
 Your figure does not have to depict every single number from the data aggregation result. Use your judgement. It just needs to complement the table, add context, and allow for some sanity checking both ways.
 
 ## MENU
+
 - Get the maximum and minimum of GDP per capita for all continents.
 
 - Look at the spread of GDP per capita within the continents.
@@ -63,9 +64,9 @@ lifetime
 
 Now, is it better to use the mean or median to represent this data? Let's check if the data is normally distributed. 
 
-```{r}
+```{r histogram of life expectancy}
 ggplot(gapminder, aes(lifeExp)) +
-  geom_histogram(binwidth = 1, fill = "light blue") +
+  geom_histogram(binwidth = 1, fill = "dark blue") +
   xlab("Count") +
   ylab("Life expectancy") +
   ggtitle("Frequency distribution of global life expectancy")
@@ -74,7 +75,7 @@ ggplot(gapminder, aes(lifeExp)) +
 
 It's pretty clear our data isn't normally distributed, so it's more appropriate to use the median to represent life expectancy. 
 
-#### Plotting global change in life expectancy over time
+#### Plotting global change in median life expectancy over time
 
 First, we can plot median life expectancy for 1952 and 2007, and compare those. 
 
@@ -88,6 +89,8 @@ lifetime %>%
   ylab("Median life expectancy") +
   ggtitle("Worldwide life expectancy, 1952")
 ```
+In 1952, median life expectancy for Oceania and Europe was fairly similar and at the high end, Africa and Asia similar and at the low end, and the Americas had a median somewhere in between. 
+
 
 ```{r 2007 median life expectancy (bar graph)}
 lifetime %>% 
@@ -99,6 +102,11 @@ lifetime %>%
   ylab("Median life expectancy") +
   ggtitle("Worldwide life expectancy, 2007")
 ```
+
+Looks like in 2007 Oceania, Europe, Asia, and the Americas are fairly close for median life expectancy with Africa close to 20 years lower than the rest. 
+
+
+Let's check out the change in median life expectancy from 1952 to 2007. 
 
 ```{r change in mdlife 52 - 07}
 gapminder %>% 
@@ -125,6 +133,7 @@ ggplot(lifetime, aes(year, mdlife, color = continent)) +
 ```
 
 Looks like all continents generally have a trend of increasing life expectancy over time, with Europe and Oceania following a similar trend and maintaining the highest median life expectancy. Asia and the Americas have a more dramatic increase over time, starting much lower than Europe and Oceania but closing the gap to within about five years by 2007. Median life expectancy in Africa is the lowest throughout, with a less dramatic gain over time-- it appears that the gap between Africa and the rest of the continents has widened over time. 
+
 
 #### Plotting global change in life expectancy: bar graph
   
@@ -162,14 +171,8 @@ ggplot(lifeincr, aes(continent, change, fill = continent)) +
 
 make bar graph with min + max + median GDP on each continent (figure out how to get into ggplot as can't pipe it!)
 
-```{r continent summary stats - gdp}
-
-gapminder %>% 
-  group_by(continent, year)
-
-
- 
-```
+###### Boxplot 
+We can use a boxplot to examine the minimum, maximum, and median values of GP per capita for each continent. 
 
 ```{r continent gdppercap boxplot}
 gdp <- ggplot(gapminder, aes(continent, gdpPercap, fill = continent))
@@ -181,24 +184,50 @@ gdp +
   xlab("Continent") +
   ylab("GDP per capita")
 ```
+
+
+
 ```{r}
 #geom_col for stacked bar graph
 ```
 
 ```{r}
-gapminder %>% 
+minmax <- gapminder %>% 
   group_by(continent) %>% 
   summarise(min = min(gdpPercap), md = median(gdpPercap), max = max(gdpPercap)) 
 
-
+minmax
 
 ```
 
+Let's see a graph of the minimum GDP per capita value for each continent. 
+
+```{r}
+ggplot(minmax, aes(continent, min, fill = continent)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  ggtitle("Minimum GDP per capita by continent, 1952-2007") +
+  xlab("Continent") +
+  ylab("GDP per capita value")
+```
+
+Now, a graph of the maximum GDP per capita value for each continent. 
+
+```{r}
+ggplot(minmax, aes(continent, max, fill = continent)) +
+  geom_col() +  
+  ggtitle("Maximum GDP per capita by continent, 1952-2007") +
+  scale_fill_brewer(palette = "Dark2") +
+  xlab("Continent") +
+  ylab("GDP per capita value")
+```
 
 
 ## Find countries with interesting stories 
 
 #### Correlation of GDP per capita and life expectancy
+
+###### Scatterplot
 
 First, let's look at the relationship between GDP per capita and life expectancy, using a basic scatterplot. 
 ```{r scatterplot of gdpPercap + lifeExp}
@@ -238,7 +267,6 @@ change %>%
 ```
 
 Out of the entire dataset, this has only occured 54 times! Our assumption that GDP per capita and life expectancy will increase together was largely correct, with a few exceptions. 
-
 
 
 # having trouble graphing because ggplot2 doesn't group the way that dplyr does
@@ -298,14 +326,27 @@ popdown <- gapminder %>%
 
 popdown
 ```
-MAYBE EXCLUDE SCATTER PLOT, OR NEED TO DISCUSS IT
+
+Occasionally, yes! With only 36 observations, this is our rarest find yet.
+
+Let's check out a scatter plot to see how our observations vary in population and life expectancy change. 
+
 ```{r scatter plot of lifechange, popchange}
-ggplot(popdown, aes(lifechange, popchange, color = continent)) +
+ggplot(popdown, aes(lifechange, popchange, color = continent, label = country)) +
   scale_color_brewer(palette = "Dark2") +
-  geom_point()
+  geom_point() +
+  xlab("Change in life expectancy") +
+  ylab("Change in population") +
+  geom_text(aes(label = ifelse (lifechange > 3 | popchange < -1500000, as.character(country), '')), vjust = -1, hjust = .7) +
+  geom_text(aes(label = ifelse (lifechange > 3 | popchange < -1500000, as.character(year), '')), vjust = .5, hjust = 1.2)
+  
+
 ```
 
-Occasionally, yes! With only 36 observations, this is our rarest find yet. Let's explore if there's a spatial pattern here. 
+
+
+
+ Now, let's explore if there's a spatial pattern. 
 
 ```{r count countries by continent}
 popdown %>% 
@@ -337,7 +378,7 @@ popdown %>%
   arrange(year)
 
 ggplot(popdown, aes(year)) +
-  geom_bar(fill = "light blue") +
+  geom_bar(fill = "dark blue") +
   xlab("Year") +
   ylab("Count") +
   ggtitle("Temporal pattern of increasing life expectancy and decreasing population ")
@@ -350,5 +391,5 @@ Yes, there is a clear temporal pattern to this phenomenon. It appears that over 
 ## Special thanks to (GET THIS TO WORK)
 - (Bar graph help)[https://ggplot2.tidyverse.org/reference/geom_bar.html]
 
-
+- [Labelling points in scatterplot) (https://stackoverflow.com/questions/15624656/label-points-in-geom-point)
 
